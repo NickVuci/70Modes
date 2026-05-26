@@ -226,7 +226,7 @@ function accidentalDisplay(steps, hasExplicitAccidental = true) {
 }
 
 function getAccidentalStyle() {
-  return els.accidentalStyle?.value || ACCIDENTAL_STYLE.ARROWS;
+  return els.accidentalStyle?.value || ACCIDENTAL_STYLE.STEIN_ZIMMERMANN;
 }
 
 function enrichEvents(events, referenceNote, refHz) {
