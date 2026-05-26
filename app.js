@@ -528,7 +528,7 @@ function drawStaff(events, ref) {
         const xOffset = chordCollisionOffset(event, note);
         const noteX = x + xOffset;
         drawLedgerLines(svg, noteX, note.diatonic, staff);
-        if (note.accidentalDisplay) addText(svg, noteX - 27, y + 8, note.accidentalDisplay, "31px", "400", "#111", "middle", MUSIC_FONT_FAMILY);
+        if (note.accidentalDisplay) addText(svg, noteX - 27, y, note.accidentalDisplay, "31px", "400", "#111", "middle", MUSIC_FONT_FAMILY);
         drawNoteHead(svg, noteX, y);
       });
 
