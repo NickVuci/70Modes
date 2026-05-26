@@ -1,5 +1,7 @@
 const EDO = 31;
 const CENTS_PER_STEP = 1200 / EDO;
+const UI_FONT_FAMILY = "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+const MUSIC_FONT_FAMILY = "\"Bravura\", \"Bravura Text\", serif";
 const NATURAL_STEPS = { C: 0, D: 5, E: 10, F: 13, G: 18, A: 23, B: 28 };
 const DIATONIC_INDEX = { C: 0, D: 1, E: 2, F: 3, G: 4, A: 5, B: 6 };
 const UPDOWN_DISPLAY = new Map([
@@ -493,7 +495,7 @@ function drawStaff(events, ref) {
     addLine(svg, staff.left, y, staff.right, y, "#1f1a16", 1.25);
   }
 
-  addText(svg, 28, 118, "𝄞", "70px", "400", "#1f1a16");
+  addText(svg, 28, 118, "𝄞", "70px", "400", "#1f1a16", "start", MUSIC_FONT_FAMILY);
   addLine(svg, staff.left, staff.top, staff.left, staff.top + 4 * staff.lineSpacing, "#1f1a16", 1.4);
 
   if (!events.length) {
@@ -526,7 +528,7 @@ function drawStaff(events, ref) {
         const xOffset = chordCollisionOffset(event, note);
         const noteX = x + xOffset;
         drawLedgerLines(svg, noteX, note.diatonic, staff);
-        if (note.accidentalDisplay) addText(svg, noteX - 27, y + 8, note.accidentalDisplay, "31px", "750", "#111", "middle");
+        if (note.accidentalDisplay) addText(svg, noteX - 27, y + 8, note.accidentalDisplay, "31px", "400", "#111", "middle", MUSIC_FONT_FAMILY);
         drawNoteHead(svg, noteX, y);
       });
 
@@ -605,7 +607,7 @@ function addLine(svg, x1, y1, x2, y2, stroke, width) {
   return line;
 }
 
-function addText(svg, x, y, text, size, weight, fill, anchor = "start") {
+function addText(svg, x, y, text, size, weight, fill, anchor = "start", fontFamily = UI_FONT_FAMILY) {
   const el = document.createElementNS("http://www.w3.org/2000/svg", "text");
   el.setAttribute("x", x);
   el.setAttribute("y", y);
@@ -613,7 +615,7 @@ function addText(svg, x, y, text, size, weight, fill, anchor = "start") {
   el.setAttribute("font-weight", weight);
   el.setAttribute("fill", fill);
   el.setAttribute("text-anchor", anchor);
-  el.setAttribute("font-family", "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif");
+  el.setAttribute("font-family", fontFamily);
   el.textContent = text;
   svg.appendChild(el);
   return el;

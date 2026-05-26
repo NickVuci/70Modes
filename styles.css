@@ -1,3 +1,15 @@
+@font-face {
+  font-family: "Bravura";
+  src: url("fonts/Bravura.woff") format("woff");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Bravura Text";
+  src: url("fonts/BravuraText.woff") format("woff");
+  font-display: swap;
+}
+
 :root {
   --bg: #f6f1e8;
   --panel: #fffaf0;
@@ -7,6 +19,8 @@
   --accent2: #9b6f37;
   --bad: #a73526;
   --good: #286b43;
+  --music-font: "Bravura", "Bravura Text", serif;
+  --music-text-font: "Bravura Text", "Bravura", serif;
 }
 
 * { box-sizing: border-box; }
