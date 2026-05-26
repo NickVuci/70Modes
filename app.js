@@ -2,6 +2,10 @@ const EDO = 31;
 const CENTS_PER_STEP = 1200 / EDO;
 const UI_FONT_FAMILY = "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
 const MUSIC_FONT_FAMILY = "\"Bravura\", \"Bravura Text\", serif";
+const ACCIDENTAL_FONT_SIZE = "36px";
+const ACCIDENTAL_ARROW_FONT_SIZE = "28px";
+const ACCIDENTAL_ARROW_Y_OFFSET = 8;
+const SMUFL_G_CLEF = String.fromCodePoint(0xE050);
 const ACCIDENTAL_STYLE = {
   ARROWS: "arrows",
   STEIN_ZIMMERMANN: "stein-zimmermann"
@@ -520,8 +524,7 @@ function drawStaff(events, ref) {
     addLine(svg, staff.left, y, staff.right, y, "#1f1a16", 1.25);
   }
 
-  addText(svg, 28, 118, "𝄞", "70px", "400", "#1f1a16", "start", MUSIC_FONT_FAMILY);
-  addLine(svg, staff.left, staff.top, staff.left, staff.top + 4 * staff.lineSpacing, "#1f1a16", 1.4);
+  drawTrebleClef(svg, staff);
 
   if (!events.length) {
     addText(svg, 102, 185, "Enter note tokens to render notation.", "18px", "650", "#70675c");
@@ -529,7 +532,7 @@ function drawStaff(events, ref) {
   }
 
   events.forEach((event, eventIndex) => {
-    const x = 116 + eventIndex * 78;
+    const x = 156 + eventIndex * 78;
     const avgDiatonic = event.notes.reduce((sum, n) => sum + n.diatonic, 0) / event.notes.length;
     const stemUp = avgDiatonic < staff.bottomLineDiatonic + 3;
     const ys = event.notes.map(note => noteY(note, staff));
@@ -553,7 +556,7 @@ function drawStaff(events, ref) {
         const xOffset = chordCollisionOffset(event, note);
         const noteX = x + xOffset;
         drawLedgerLines(svg, noteX, note.diatonic, staff);
-        if (note.accidentalDisplay) addText(svg, noteX - 27, y, note.accidentalDisplay, "31px", "400", "#111", "middle", MUSIC_FONT_FAMILY);
+        if (note.accidentalDisplay) drawAccidental(svg, noteX - 27, y, note.accidentalDisplay);
         drawNoteHead(svg, noteX, y);
       });
 
@@ -570,16 +573,33 @@ function drawStaff(events, ref) {
       addText(svg, x, 173, `${note.step}\\31`, "12px", "800", "#241f1a", "middle");
       addText(svg, x, 190, formatCents(note.cents), "11px", "650", "#70675c", "middle");
     }
-
-    if ((eventIndex + 1) % 4 === 0) {
-      const bx = x + 38;
-      addLine(svg, bx, staff.top, bx, staff.top + 4 * staff.lineSpacing, "#7b6f63", 1);
-    }
   });
 }
 
 function noteY(note, staff) {
   return staff.top + 4 * staff.lineSpacing - (note.diatonic - staff.bottomLineDiatonic) * (staff.lineSpacing / 2);
+}
+
+function drawTrebleClef(svg, staff) {
+  const gLineY = staff.top + 3 * staff.lineSpacing;
+  addText(svg, 34, gLineY + 20, SMUFL_G_CLEF, "82px", "400", "#1f1a16", "start", MUSIC_FONT_FAMILY);
+}
+
+function accidentalY(display, noteYPosition) {
+  return /[↑↓]/u.test(display) ? noteYPosition + ACCIDENTAL_ARROW_Y_OFFSET : noteYPosition;
+}
+
+function drawAccidental(svg, x, y, display) {
+  const el = addText(svg, x, accidentalY(display, y), "", ACCIDENTAL_FONT_SIZE, "400", "#111", "middle", MUSIC_FONT_FAMILY);
+  const hasArrow = /[↑↓]/u.test(display);
+  Array.from(display).forEach(char => {
+    const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+    tspan.textContent = char;
+    if (char === "↑" || char === "↓") tspan.setAttribute("font-size", ACCIDENTAL_ARROW_FONT_SIZE);
+    else if (hasArrow) tspan.setAttribute("dy", -ACCIDENTAL_ARROW_Y_OFFSET);
+    el.appendChild(tspan);
+  });
+  return el;
 }
 
 function drawLedgerLines(svg, x, diatonic, staff) {
