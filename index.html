@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>31-EDO Notation Guide MVP</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>31-EDO Notation Guide MVP</h1>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">Input</h2>
+        <details class="help-tooltip header-help">
+          <summary aria-label="Notation help">?</summary>
+          <div class="help-panel">
+            <p class="hint">
+              Use spaces for melody notes. Put chord notes inside brackets, e.g. <span class="small-code">[C4 E4 G4]</span>. <span class="small-code">^</span>/<span class="small-code">↑</span> = up by 1 step, <span class="small-code">v</span>/<span class="small-code">↓</span> = down by 1 step, <span class="small-code">#</span> = sharp by 2 steps, <span class="small-code">b</span> = flat by 2 steps, <span class="small-code">x</span> = double sharp by 4 steps, and <span class="small-code">bb</span> = double flat by 4 steps. Imported scale spellings also accept <span class="small-code">t</span> as up and <span class="small-code">d</span> as down.
+            </p>
+            <div class="legend" aria-label="Notation legend">
+              <div class="legend-row"><strong>C4</strong><span>Natural staff note. Octave numbers use scientific pitch notation.</span></div>
+              <div class="legend-row"><strong>C^4</strong><span>C up, +1 step.</span></div>
+              <div class="legend-row"><strong>C#4</strong><span>C sharp, +2 steps.</span></div>
+              <div class="legend-row"><strong>C^#4</strong><span>C up-sharp, +3 steps.</span></div>
+              <div class="legend-row"><strong>Cx4</strong><span>C double-sharp, +4 steps.</span></div>
+              <div class="legend-row"><strong>Cvb4</strong><span>C down-flat, -3 steps.</span></div>
+            </div>
+          </div>
+        </details>
+      </div>
+      <div class="card-body">
+        <div class="notation-data-grid">
+          <div class="field">
+            <label for="musicInput">Scale / chord tokens</label>
+            <textarea id="musicInput" spellcheck="false">C4 D4 E4 F4 G4 A4 B4 C5</textarea>
+
+          </div>
+
+          <div class="field">
+            <label for="scaleWorkshopOutput">Scale Workshop data</label>
+            <textarea id="scaleWorkshopOutput" readonly spellcheck="false"></textarea>
+          </div>
+        </div>
+
+
+        <div id="errorBox" class="error-box"></div>
+
+        <div class="grid2">
+          <div class="field compact-field">
+            <label for="referenceNote">0c Note</label>
+            <input id="referenceNote" value="C4" spellcheck="false" />
+          </div>
+          <div class="field compact-field hz-field">
+            <label for="refHz">0c Hz</label>
+            <input id="refHz" type="number" value="261.625565" min="1" step="0.000001" />
+          </div>
+          <div class="field mode-field">
+            <label for="scaleSelect">70 modes of 31-EDO</label>
+            <select id="scaleSelect">
+              <option value="">Select a scale…</option>
+            </select>
+          </div>
+          <div class="playback-controls">
+            <div class="tempo-field">
+              <label for="tempoBpm">Tempo</label>
+              <input id="tempoBpm" type="number" value="90" min="20" max="300" step="1" />
+            </div>
+            <button class="primary" id="playBtn" type="button">Play</button>
+            <button id="stopBtn" type="button">Stop</button>
+          </div>
+          <div class="sw-actions">
+            <button id="copySwBtn" type="button">Copy SW data</button>
+            <span id="copyStatus" class="copy-status"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="staff-scroll">
+        <svg id="staffSvg" viewBox="0 0 1000 260" role="img" aria-label="Rendered 31-EDO staff notation"></svg>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">Musical affect</h2>
+      </div>
+      <div class="card-body">
+        <div class="affect-layout">
+          <div>
+            <div class="affect-block">
+              <p class="affect-section-title">Season and time of day</p>
+              <div class="time-clock-wrap">
+                <div class="season-ring" id="seasonOptions">
+                  <button type="button" class="affect-option season-mark spring active" data-season="Spring">Spring</button>
+                  <button type="button" class="affect-option season-mark summer" data-season="Summer">Summer</button>
+                  <button type="button" class="affect-option season-mark autumn" data-season="Autumn">Autumn</button>
+                  <button type="button" class="affect-option season-mark winter" data-season="Winter">Winter</button>
+                </div>
+                <div class="time-clock" id="timeClock">
+                  <button type="button" class="clock-mark midnight" data-time="Midnight" data-angle="0">Midnight</button>
+                  <button type="button" class="clock-mark predawn" data-time="Pre-dawn" data-angle="45">Pre-dawn</button>
+                  <button type="button" class="clock-mark dawn" data-time="Dawn" data-angle="90">Dawn</button>
+                  <button type="button" class="clock-mark morning" data-time="Morning" data-angle="135">Morning</button>
+                  <button type="button" class="clock-mark noon active" data-time="Noon" data-angle="180">Noon</button>
+                  <button type="button" class="clock-mark afternoon" data-time="Afternoon" data-angle="225">Afternoon</button>
+                  <button type="button" class="clock-mark dusk" data-time="Dusk" data-angle="270">Dusk</button>
+                  <button type="button" class="clock-mark night" data-time="Night" data-angle="315">Night</button>
+                  <div class="clock-center" id="timeClockLabel">Spring Noon</div>
+                </div>
+              </div>
+            </div>
+            <div class="affect-block">
+              <p class="affect-section-title">Weather and atmosphere</p>
+              <div class="affect-chip-grid" id="weatherTerms">
+                <button type="button" class="affect-chip" data-weather="sunshine">Sunshine</button>
+                <button type="button" class="affect-chip" data-weather="clouds">Clouds</button>
+                <button type="button" class="affect-chip" data-weather="rain">Rain</button>
+                <button type="button" class="affect-chip" data-weather="storm">Storm</button>
+                <button type="button" class="affect-chip" data-weather="wind">Wind</button>
+                <button type="button" class="affect-chip" data-weather="fog">Fog</button>
+                <button type="button" class="affect-chip" data-weather="snow">Snow</button>
+                <button type="button" class="affect-chip" data-weather="mist">Mist</button>
+                <button type="button" class="affect-chip" data-weather="frost">Frost</button>
+                <button type="button" class="affect-chip" data-weather="heat">Heat</button>
+                <button type="button" class="affect-chip" data-weather="cold">Cold</button>
+                <button type="button" class="affect-chip" data-weather="clear sky">Clear sky</button>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="affect-block">
+              <p class="affect-section-title">Emotions and affect terms</p>
+              <div class="affect-chip-grid" id="affectTerms">
+                <button type="button" class="affect-chip" data-term="joyful">Joyful</button>
+                <button type="button" class="affect-chip" data-term="melancholic">Melancholic</button>
+                <button type="button" class="affect-chip" data-term="peaceful">Peaceful</button>
+                <button type="button" class="affect-chip" data-term="tense">Tense</button>
+                <button type="button" class="affect-chip" data-term="mysterious">Mysterious</button>
+                <button type="button" class="affect-chip" data-term="dreamlike">Dreamlike</button>
+                <button type="button" class="affect-chip" data-term="heroic">Heroic</button>
+                <button type="button" class="affect-chip" data-term="fragile">Fragile</button>
+                <button type="button" class="affect-chip" data-term="ominous">Ominous</button>
+                <button type="button" class="affect-chip" data-term="radiant">Radiant</button>
+                <button type="button" class="affect-chip" data-term="earthy">Earthy</button>
+                <button type="button" class="affect-chip" data-term="floating">Floating</button>
+                <button type="button" class="affect-chip" data-term="restless">Restless</button>
+                <button type="button" class="affect-chip" data-term="sacred">Sacred</button>
+                <button type="button" class="affect-chip" data-term="playful">Playful</button>
+                <button type="button" class="affect-chip" data-term="nostalgic">Nostalgic</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="affectSummary">Affect description</label>
+              <textarea id="affectSummary" readonly spellcheck="false"></textarea>
+              <div class="affect-output-actions">
+                <button id="copyAffectBtn" type="button">Copy affect</button>
+                <span id="affectCopyStatus" class="copy-status"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
