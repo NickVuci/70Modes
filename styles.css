@@ -204,6 +204,11 @@ textarea {
   flex: 0 1 360px;
 }
 
+.accidental-style-field {
+  width: 190px;
+  flex: 0 0 190px;
+}
+
 .tempo-field {
   width: 82px;
   flex: 0 0 82px;

@@ -2,11 +2,26 @@ const EDO = 31;
 const CENTS_PER_STEP = 1200 / EDO;
 const UI_FONT_FAMILY = "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
 const MUSIC_FONT_FAMILY = "\"Bravura\", \"Bravura Text\", serif";
+const ACCIDENTAL_STYLE = {
+  ARROWS: "arrows",
+  STEIN_ZIMMERMANN: "stein-zimmermann"
+};
 const NATURAL_STEPS = { C: 0, D: 5, E: 10, F: 13, G: 18, A: 23, B: 28 };
 const DIATONIC_INDEX = { C: 0, D: 1, E: 2, F: 3, G: 4, A: 5, B: 6 };
 const UPDOWN_DISPLAY = new Map([
   [-10, "𝄫𝄫↓"], [-9, "↓𝄫𝄫"], [-8, "𝄫𝄫"], [-7, "↓𝄫↓"], [-6, "𝄫↓"], [-5, "↓𝄫"], [-4, "𝄫"], [-3, "↓♭"], [-2, "♭"], [-1, "↓"], [0, ""],
   [1, "↑"], [2, "♯"], [3, "↑♯"], [4, "𝄪"], [5, "↑𝄪"], [6, "𝄪↑"], [7, "↑𝄪↑"], [8, "𝄪𝄪"], [9, "↑𝄪𝄪"], [10, "𝄪𝄪↑"]
+]);
+const STEIN_ZIMMERMANN_DISPLAY = new Map([
+  [-4, String.fromCodePoint(0xE264)],
+  [-3, String.fromCodePoint(0xE281)],
+  [-2, String.fromCodePoint(0xE260)],
+  [-1, String.fromCodePoint(0xE280)],
+  [0, String.fromCodePoint(0xE261)],
+  [1, String.fromCodePoint(0xE282)],
+  [2, String.fromCodePoint(0xE262)],
+  [3, String.fromCodePoint(0xE283)],
+  [4, String.fromCodePoint(0xE263)]
 ]);
 
 const BASIC_MODES_31EDO = [["Ionian / Major","C4 D4 E4 F4 G4 A4 B4 C5"],["Dorian","C4 D4 Eb4 F4 G4 A4 Bb4 C5"],["Phrygian","C4 Db4 Eb4 F4 G4 Ab4 Bb4 C5"],["Lydian","C4 D4 E4 F#4 G4 A4 B4 C5"],["Mixolydian","C4 D4 E4 F4 G4 A4 Bb4 C5"],["Aeolian / Minor","C4 D4 Eb4 F4 G4 Ab4 Bb4 C5"],["Locrian","C4 Db4 Eb4 F4 Gb4 Ab4 Bb4 C5"],["Supermajor","C4 D4 Et4 F4 G4 At4 Bt4 C5"],["Colrian b3 b7","C4 Dt4 Eb4 F4 Gt4 At4 Bb4 C5"],["Subphrygian","C4 Ddb4 Edb4 F4 G4 Adb4 Bdb4 C5"],["Rodian #t4","C4 D4 Et4 F#t4 G4 A4 Bt4 C5"],["Gryphian b7","C4 Dt4 Et4 F4 G4 At4 Bb4 C5"],["Subminor d4","C4 D4 Edb4 Fd4 G4 Adb4 Bdb4 C5"],["Sublocrian b7","C4 Ddb4 Edb4 F4 Gdb4 Adb4 Bb4 C5"],["Subminor","C4 D4 Edb4 F4 G4 Adb4 Bdb4 C5"],["Sublocrian b3 b7","C4 Ddb4 Eb4 F4 Gdb4 Adb4 Bb4 C5"],["Gryphian","C4 Dt4 Et4 F4 G4 At4 Bt4 C5"],["Subdorian d4","C4 D4 Edb4 Fd4 G4 A4 Bdb4 C5"],["Subphrygian b7","C4 Ddb4 Edb4 F4 G4 Adb4 Bb4 C5"],["Supermajor #t4","C4 D4 Et4 F#t4 G4 At4 Bt4 C5"],["Colrian b7","C4 Dt4 Et4 F4 Gt4 At4 Bb4 C5"],["Subdorian","C4 D4 Edb4 F4 G4 A4 Bdb4 C5"],["Phrygian db2 db6","C4 Ddb4 Eb4 F4 G4 Adb4 Bb4 C5"],["Gryphian #t4","C4 Dt4 Et4 F#t4 G4 At4 Bt4 C5"],["Submixolydian d4","C4 D4 E4 Fd4 G4 A4 Bdb4 C5"],["Subminor (b7)","C4 D4 Edb4 F4 G4 Adb4 Bb4 C5"],["Locrian db2 db5","C4 Ddb4 Eb4 F4 Gdb4 Ab4 Bb4 C5"],["Colrian","C4 Dt4 Et4 F4 Gt4 At4 Bt4 C5"],["Rodian","C4 D4 Et4 F4 G4 A4 Bt4 C5"],["Dorian t2 t6","C4 Dt4 Eb4 F4 G4 At4 Bb4 C5"],["Subphrygian d4","C4 Ddb4 Edb4 Fd4 G4 Adb4 Bdb4 C5"],["Superlydian t7","C4 D4 E4 F#t4 G4 A4 Bt4 C5"],["Supermajor b7","C4 D4 Et4 F4 G4 At4 Bb4 C5"],["Minor t2 t5","C4 Dt4 Eb4 F4 Gt4 Ab4 Bb4 C5"],["Sublocrian","C4 Ddb4 Edb4 F4 Gdb4 Adb4 Bdb4 C5"],["Submixolydian","C4 D4 E4 F4 G4 A4 Bdb4 C5"],["Minor db6","C4 D4 Eb4 F4 G4 Adb4 Bb4 C5"],["Locrian db5","C4 Db4 Eb4 F4 Gdb4 Ab4 Bb4 C5"],["Dylian","C4 D4 E4 Fd4 G4 A4 B4 C5"],["Dorian db3","C4 D4 Edb4 F4 G4 A4 Bb4 C5"],["Phrygian db2","C4 Ddb4 Eb4 F4 G4 Ab4 Bb4 C5"],["Colrian #t4","C4 Dt4 Et4 F#t4 Gt4 At4 Bt4 C5"],["Superlydian","C4 D4 E4 F#t4 G4 A4 B4 C5"],["Mixolydian t3","C4 D4 Et4 F4 G4 A4 Bb4 C5"],["Minor / Aeolian t2","C4 Dt4 Eb4 F4 G4 Ab4 Bb4 C5"],["Sublocrian d4","C4 Ddb4 Edb4 Fd4 Gdb4 Adb4 Bdb4 C5"],["Moxidylian","C4 D4 E4 F4 G4 A4 Bt4 C5"],["Dorian t6","C4 D4 Eb4 F4 G4 At4 Bb4 C5"],["Phrygian t5","C4 Db4 Eb4 F4 Gt4 Ab4 Bb4 C5"],["Neutral / Mohajira / Mosh (4L3s)","C4 D4 Ed4 F4 G4 Ad4 Bd4 C5"],["Half Locrian b3 b7","C4 Dd4 Eb4 F4 Gd4 Ad4 Bb4 C5"],["Half Phrygian","C4 Dd4 Ed4 F4 G4 Ad4 Bd4 C5"],["Half Dorian t4","C4 D4 Ed4 Ft4 G4 A4 Bd4 C5"],["Half Phrygian b7","C4 Dd4 Ed4 F4 G4 Ad4 Bb4 C5"],["Neutral t4","C4 D4 Ed4 Ft4 G4 Ad4 Bd4 C5"],["Half Locrian b7","C4 Dd4 Ed4 F4 Gd4 Ad4 Bb4 C5"],["Rast / Half Dorian","C4 D4 Ed4 F4 G4 A4 Bd4 C5"],["Phrygian d2 d6","C4 Dd4 Eb4 F4 G4 Ad4 Bb4 C5"],["Half Phrygian t4","C4 Dd4 Ed4 Ft4 G4 Ad4 Bd4 C5"],["Half Lydian Dominant","C4 D4 E4 Ft4 G4 A4 Bd4 C5"],["Neutral b7","C4 D4 Ed4 F4 G4 Ad4 Bb4 C5"],["Locrian d2 d5","C4 Dd4 Eb4 F4 Gd4 Ab4 Bb4 C5"],["Half Locrian","C4 Dd4 Ed4 F4 Gd4 Ad4 Bd4 C5"],["Rosian / Half Lydian","C4 D4 E4 Ft4 G4 A4 B4 C5"],["Dorian d3","C4 D4 Ed4 F4 G4 A4 Bb4 C5"],["Phrygian d2","C4 Dd4 Eb4 F4 G4 Ab4 Bb4 C5"],["Half Locrian t4","C4 Dd4 Ed4 Ft4 Gd4 Ad4 Bd4 C5"],["Half Mixolydian","C4 D4 E4 F4 G4 A4 Bd4 C5"],["Minor / Aeolian d6","C4 D4 Eb4 F4 G4 Ad4 Bb4 C5"],["Locrian d5","C4 Db4 Eb4 F4 Gd4 Ab4 Bb4 C5"]];
@@ -14,6 +29,7 @@ const BASIC_MODES_31EDO = [["Ionian / Major","C4 D4 E4 F4 G4 A4 B4 C5"],["Dorian
 const els = {
   referenceNote: document.getElementById("referenceNote"),
   scaleSelect: document.getElementById("scaleSelect"),
+  accidentalStyle: document.getElementById("accidentalStyle"),
   refHz: document.getElementById("refHz"),
   musicInput: document.getElementById("musicInput"),
   scaleWorkshopOutput: document.getElementById("scaleWorkshopOutput"),
@@ -48,6 +64,7 @@ els.timeClock.addEventListener("click", selectClockTime);
 els.affectTerms.addEventListener("click", toggleAffectTerm);
 els.weatherTerms.addEventListener("click", toggleWeatherTerm);
 els.scaleSelect.addEventListener("change", applySelectedScale);
+els.accidentalStyle.addEventListener("change", render);
 [els.referenceNote, els.refHz, els.musicInput, els.tempoBpm].forEach(el => {
   el.addEventListener("input", debounce(render, 120));
   el.addEventListener("change", debounce(render, 120));
@@ -150,7 +167,7 @@ function parseNote(token) {
     octave,
     accidentalText,
     accidentalSteps: accidentalSteps.steps,
-    accidentalDisplay: accidentalDisplay(accidentalSteps.steps),
+    accidentalDisplay: accidentalDisplay(accidentalSteps.steps, accidentalText.trim().length > 0),
     rawStep,
     diatonic
   };
@@ -193,11 +210,19 @@ function accidentalToSteps(text) {
   return { steps };
 }
 
-function accidentalDisplay(steps) {
+function accidentalDisplay(steps, hasExplicitAccidental = true) {
+  if (!hasExplicitAccidental && steps === 0) return "";
+  if (getAccidentalStyle() === ACCIDENTAL_STYLE.STEIN_ZIMMERMANN && STEIN_ZIMMERMANN_DISPLAY.has(steps)) {
+    return STEIN_ZIMMERMANN_DISPLAY.get(steps);
+  }
   if (UPDOWN_DISPLAY.has(steps)) return UPDOWN_DISPLAY.get(steps);
   if (steps > 0) return `+${steps}`;
   if (steps < 0) return `${steps}`;
   return "";
+}
+
+function getAccidentalStyle() {
+  return els.accidentalStyle?.value || ACCIDENTAL_STYLE.ARROWS;
 }
 
 function enrichEvents(events, referenceNote, refHz) {
