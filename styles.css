@@ -204,6 +204,11 @@ textarea {
   flex: 0 1 360px;
 }
 
+.root-field {
+  width: 125px;
+  flex: 0 0 125px;
+}
+
 .accidental-style-field {
   width: 190px;
   flex: 0 0 190px;

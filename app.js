@@ -10,6 +10,8 @@ const ACCIDENTAL_STYLE = {
   ARROWS: "arrows",
   STEIN_ZIMMERMANN: "stein-zimmermann"
 };
+const DEFAULT_REFERENCE_NOTE = "C4";
+const LETTER_SEQUENCE = ["C", "D", "E", "F", "G", "A", "B"];
 const NATURAL_STEPS = { C: 0, D: 5, E: 10, F: 13, G: 18, A: 23, B: 28 };
 const DIATONIC_INDEX = { C: 0, D: 1, E: 2, F: 3, G: 4, A: 5, B: 6 };
 const UPDOWN_DISPLAY = new Map([
@@ -33,6 +35,7 @@ const BASIC_MODES_31EDO = [["Ionian / Major","C4 D4 E4 F4 G4 A4 B4 C5"],["Dorian
 const els = {
   referenceNote: document.getElementById("referenceNote"),
   scaleSelect: document.getElementById("scaleSelect"),
+  rootNote: document.getElementById("rootNote"),
   accidentalStyle: document.getElementById("accidentalStyle"),
   refHz: document.getElementById("refHz"),
   musicInput: document.getElementById("musicInput"),
@@ -58,6 +61,7 @@ let currentEvents = [];
 let audioContext = null;
 let scheduledNodes = [];
 let playbackTimers = [];
+let scaleSelectionError = "";
 
 els.playBtn.addEventListener("click", playCurrentSequence);
 els.stopBtn.addEventListener("click", stopPlayback);
@@ -68,6 +72,10 @@ els.timeClock.addEventListener("click", selectClockTime);
 els.affectTerms.addEventListener("click", toggleAffectTerm);
 els.weatherTerms.addEventListener("click", toggleWeatherTerm);
 els.scaleSelect.addEventListener("change", applySelectedScale);
+if (els.rootNote) {
+  els.rootNote.addEventListener("input", debounce(applySelectedScale, 120));
+  els.rootNote.addEventListener("change", applySelectedScale);
+}
 els.accidentalStyle.addEventListener("change", render);
 [els.referenceNote, els.refHz, els.musicInput, els.tempoBpm].forEach(el => {
   el.addEventListener("input", debounce(render, 120));
@@ -94,8 +102,23 @@ function populateScaleSelect() {
 function applySelectedScale() {
   const index = Number(els.scaleSelect.value);
   if (!Number.isInteger(index) || !BASIC_MODES_31EDO[index]) return;
-  const sourceNotes = BASIC_MODES_31EDO[index][1];
-  const notes = sourceNotes.split(/\s+/).filter(Boolean).map(convertSourceTokenToUpsDowns).join(" ");
+  const sourceTokens = BASIC_MODES_31EDO[index][1].split(/\s+/).filter(Boolean);
+  const rootNote = getSelectedRootNote();
+  if (rootNote.error) {
+    scaleSelectionError = `Root note error: ${rootNote.error}`;
+    render();
+    return;
+  }
+
+  const transposedScale = transposeScaleTokens(sourceTokens, rootNote);
+  if (transposedScale.error) {
+    scaleSelectionError = transposedScale.error;
+    render();
+    return;
+  }
+
+  scaleSelectionError = "";
+  const notes = transposedScale.tokens.join(" ");
   els.musicInput.value = notes;
   clearCopyStatus();
   render();
@@ -104,12 +127,74 @@ function applySelectedScale() {
 function convertSourceTokenToUpsDowns(token) {
   const note = parseNote(token);
   if (note.error) return token;
-  return `${note.letter}${stepsToInputAccidental(note.accidentalSteps)}${note.octave}`;
+  return formatNoteToken(note.letter, note.accidentalSteps, note.octave);
 }
 
 function stepsToInputAccidental(steps) {
   const inputMap = new Map([[-10, "vbbbb#"], [-9, "vbbbb"], [-8, "bbbb"], [-7, "vbbb"], [-6, "bbb"], [-5, "vbb"], [-4, "bb"], [-3, "vb"], [-2, "b"], [-1, "v"], [0, ""], [1, "^"], [2, "#"], [3, "^#"], [4, "x"], [5, "^x"], [6, "x#"], [7, "^x#"], [8, "xx"], [9, "^xx"], [10, "xx#"]]);
-  return inputMap.get(steps) ?? (steps > 0 ? `+${steps}` : `${steps}`);
+  if (inputMap.has(steps)) return inputMap.get(steps);
+  return buildAccidentalText(steps);
+}
+
+function buildAccidentalText(steps) {
+  if (steps === 0) return "";
+  const chunks = [];
+  let remaining = Math.abs(steps);
+  const units = steps > 0
+    ? [[4, "x"], [2, "#"], [1, "^"]]
+    : [[4, "bb"], [2, "b"], [1, "v"]];
+
+  units.forEach(([value, symbol]) => {
+    while (remaining >= value) {
+      chunks.push(symbol);
+      remaining -= value;
+    }
+  });
+
+  return chunks.join("");
+}
+
+function formatNoteToken(letter, accidentalSteps, octave) {
+  return `${letter}${stepsToInputAccidental(accidentalSteps)}${octave}`;
+}
+
+function getSelectedRootNote() {
+  const raw = els.rootNote?.value?.trim();
+  return parseNote(raw || DEFAULT_REFERENCE_NOTE);
+}
+
+function transposeScaleTokens(sourceTokens, targetRoot) {
+  if (!sourceTokens.length) return { tokens: [] };
+
+  const parsedTokens = sourceTokens.map(parseNote);
+  const invalidToken = parsedTokens.find(note => note.error);
+  if (invalidToken) {
+    return { error: `Selected scale token could not be parsed: ${invalidToken.token}` };
+  }
+
+  const sourceRoot = parsedTokens[0];
+  const tokens = parsedTokens.map(note => {
+    const relativeRawStep = note.rawStep - sourceRoot.rawStep;
+    const relativeDiatonic = note.diatonic - sourceRoot.diatonic;
+    return buildTransposedNoteToken(targetRoot, relativeRawStep, relativeDiatonic);
+  });
+
+  return { tokens };
+}
+
+function buildTransposedNoteToken(rootNote, relativeRawStep, relativeDiatonic) {
+  const diatonic = rootNote.diatonic + relativeDiatonic;
+  const rawStep = rootNote.rawStep + relativeRawStep;
+  const { letter, octave } = letterAndOctaveFromDiatonic(diatonic);
+  const naturalRawStep = octave * EDO + NATURAL_STEPS[letter];
+  const accidentalSteps = rawStep - naturalRawStep;
+  return formatNoteToken(letter, accidentalSteps, octave);
+}
+
+function letterAndOctaveFromDiatonic(diatonic) {
+  const letterIndex = ((diatonic % LETTER_SEQUENCE.length) + LETTER_SEQUENCE.length) % LETTER_SEQUENCE.length;
+  const octave = Math.floor((diatonic - letterIndex) / LETTER_SEQUENCE.length);
+  return { letter: LETTER_SEQUENCE[letterIndex], octave };
 }
 
 function parseMusic(text) {
@@ -479,6 +564,7 @@ function render() {
   const refHz = Number(els.refHz.value);
   const parsed = parseMusic(els.musicInput.value);
   const errors = [];
+  if (scaleSelectionError) errors.push(scaleSelectionError);
   if (ref.error) errors.push(`Reference note error: ${ref.error}`);
   errors.push(...parsed.errors);
 
@@ -726,6 +812,46 @@ function runTests() {
   console.assert(getLedgerLineDiatonics(parseNote("C4").diatonic, staff).join(",") === "28", "C4 should draw one ledger line");
   console.assert(getLedgerLineDiatonics(parseNote("G5").diatonic, staff).length === 0, "G5 should not draw a ledger line");
   console.assert(getLedgerLineDiatonics(parseNote("A5").diatonic, staff).join(",") === "40", "A5 should draw one ledger line");
+
+  const supermajorTokens = BASIC_MODES_31EDO[7][1].split(/\s+/).filter(Boolean);
+  const dSupermajor = transposeScaleTokens(supermajorTokens, parseNote("D"));
+  console.assert(!dSupermajor.error, "D Supermajor should transpose without errors");
+  console.assert(dSupermajor.tokens.join(" ") === "D4 E4 F^#4 G4 A4 B^4 C^#5 D5", "D Supermajor transposition failed");
+
+  const cUpSupermajor = transposeScaleTokens(supermajorTokens, parseNote("C^"));
+  console.assert(!cUpSupermajor.error, "C^ Supermajor should transpose without errors");
+  console.assert(cUpSupermajor.tokens.join(" ") === "C^4 D^4 E#4 F^4 G^4 A#4 B#4 C^5", "C^ Supermajor transposition failed");
+
+  const octaveDefaultRoot = parseNote("Eb");
+  console.assert(!octaveDefaultRoot.error && octaveDefaultRoot.octave === 4, "Root parsing should default to octave 4");
+
+  const parseableHighAccidental = `C${stepsToInputAccidental(11)}4`;
+  const parsedHighAccidental = parseNote(parseableHighAccidental);
+  console.assert(!parsedHighAccidental.error && parsedHighAccidental.rawStep - 4 * EDO === 11, "High accidental fallback should remain parseable");
+
+  const priorScaleSelect = els.scaleSelect.value;
+  const priorRootNote = els.rootNote.value;
+  const priorMusicInput = els.musicInput.value;
+  const priorReferenceNote = els.referenceNote.value;
+  const priorReferenceHz = els.refHz.value;
+  els.referenceNote.value = "F4";
+  els.refHz.value = "349.228231";
+  els.scaleSelect.value = "7";
+  els.rootNote.value = "D";
+  applySelectedScale();
+  console.assert(els.referenceNote.value === "F4", "Reference note should stay unchanged when root changes");
+  console.assert(els.refHz.value === "349.228231", "Reference Hz should stay unchanged when root changes");
+
+  const dEvents = enrichEvents(parseMusic(dSupermajor.tokens.join(" ")).events, parseNote("D4"), 293.664768);
+  updateScaleWorkshopOutput(dEvents, true);
+  console.assert(els.scaleWorkshopOutput.value === "5\\31\n11\\31\n13\\31\n18\\31\n24\\31\n29\\31\n31\\31", "Transposed Scale Workshop export should preserve mode steps");
+
+  els.scaleSelect.value = priorScaleSelect;
+  els.rootNote.value = priorRootNote;
+  els.musicInput.value = priorMusicInput;
+  els.referenceNote.value = priorReferenceNote;
+  els.refHz.value = priorReferenceHz;
+  els.scaleWorkshopOutput.value = prior;
 }
 
 window.addEventListener("resize", debounce(render, 120));
