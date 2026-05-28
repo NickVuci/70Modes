@@ -11,6 +11,7 @@ const ACCIDENTAL_STYLE = {
   STEIN_ZIMMERMANN: "stein-zimmermann"
 };
 const DEFAULT_REFERENCE_NOTE = "C4";
+const DEFAULT_REFERENCE_HZ = 261.63;
 const LETTER_SEQUENCE = ["C", "D", "E", "F", "G", "A", "B"];
 const NATURAL_STEPS = { C: 0, D: 5, E: 10, F: 13, G: 18, A: 23, B: 28 };
 const DIATONIC_INDEX = { C: 0, D: 1, E: 2, F: 3, G: 4, A: 5, B: 6 };
@@ -76,6 +77,7 @@ if (els.rootNote) {
   els.rootNote.addEventListener("input", debounce(applySelectedScale, 120));
   els.rootNote.addEventListener("change", applySelectedScale);
 }
+els.refHz.addEventListener("change", normalizeReferenceHzDisplay);
 els.accidentalStyle.addEventListener("change", render);
 [els.referenceNote, els.refHz, els.musicInput, els.tempoBpm].forEach(el => {
   el.addEventListener("input", debounce(render, 120));
@@ -88,6 +90,12 @@ function debounce(fn, wait) {
     clearTimeout(timeout);
     timeout = setTimeout(() => fn(...args), wait);
   };
+}
+
+function normalizeReferenceHzDisplay() {
+  const hz = Number(els.refHz.value);
+  if (!Number.isFinite(hz) || hz <= 0) return;
+  els.refHz.value = hz.toFixed(2);
 }
 
 function populateScaleSelect() {
@@ -858,6 +866,7 @@ window.addEventListener("resize", debounce(render, 120));
 populateScaleSelect();
 updateClockCenter();
 updateAffectSummary();
+normalizeReferenceHzDisplay();
 els.scaleSelect.value = "0";
 applySelectedScale();
 runTests();
