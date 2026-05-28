@@ -15,10 +15,6 @@ const DEFAULT_REFERENCE_HZ = 261.63;
 const LETTER_SEQUENCE = ["C", "D", "E", "F", "G", "A", "B"];
 const NATURAL_STEPS = { C: 0, D: 5, E: 10, F: 13, G: 18, A: 23, B: 28 };
 const DIATONIC_INDEX = { C: 0, D: 1, E: 2, F: 3, G: 4, A: 5, B: 6 };
-const UPDOWN_DISPLAY = new Map([
-  [-10, "𝄫𝄫↓"], [-9, "↓𝄫𝄫"], [-8, "𝄫𝄫"], [-7, "↓𝄫↓"], [-6, "𝄫↓"], [-5, "↓𝄫"], [-4, "𝄫"], [-3, "↓♭"], [-2, "♭"], [-1, "↓"], [0, ""],
-  [1, "↑"], [2, "♯"], [3, "↑♯"], [4, "𝄪"], [5, "↑𝄪"], [6, "𝄪↑"], [7, "↑𝄪↑"], [8, "𝄪𝄪"], [9, "↑𝄪𝄪"], [10, "𝄪𝄪↑"]
-]);
 const STEIN_ZIMMERMANN_DISPLAY = new Map([
   [-4, String.fromCodePoint(0xE264)],
   [-3, String.fromCodePoint(0xE281)],
@@ -312,10 +308,27 @@ function accidentalDisplay(steps, hasExplicitAccidental = true) {
   if (getAccidentalStyle() === ACCIDENTAL_STYLE.STEIN_ZIMMERMANN) {
     return steinZimmermannDisplay(steps);
   }
-  if (UPDOWN_DISPLAY.has(steps)) return UPDOWN_DISPLAY.get(steps);
-  if (steps > 0) return `+${steps}`;
-  if (steps < 0) return `${steps}`;
-  return "";
+  return arrowAccidentalDisplay(steps);
+}
+
+function arrowAccidentalDisplay(steps) {
+  if (steps === 0) return "";
+
+  const direction = steps > 0 ? 1 : -1;
+  const repeatedSymbol = direction > 0 ? "𝄪" : "𝄫";
+  const remainderDisplay = new Map(direction > 0
+    ? [[0, ""], [1, "↑"], [2, "♯"], [3, "↑♯"]]
+    : [[0, ""], [1, "↓"], [2, "♭"], [3, "↓♭"]]);
+
+  let remaining = Math.abs(steps);
+  let repeatedCount = 0;
+  while (remaining >= 4) {
+    repeatedCount += 1;
+    remaining -= 4;
+  }
+
+  const base = remainderDisplay.get(remaining) || "";
+  return `${base}${repeatedSymbol.repeat(repeatedCount)}`;
 }
 
 function steinZimmermannDisplay(steps) {
@@ -860,6 +873,8 @@ function runTests() {
   const parseableHighAccidental = `C${stepsToInputAccidental(11)}4`;
   const parsedHighAccidental = parseNote(parseableHighAccidental);
   console.assert(!parsedHighAccidental.error && parsedHighAccidental.rawStep - 4 * EDO === 11, "High accidental fallback should remain parseable");
+  console.assert(arrowAccidentalDisplay(5) === "↑𝄪", "Arrow +5 should render as up-arrow then double sharp glyph");
+  console.assert(arrowAccidentalDisplay(-5) === "↓𝄫", "Arrow -5 should render as down-arrow then double flat glyph");
   console.assert(accidentalDisplay(5, true) === `${STEIN_ZIMMERMANN_DISPLAY.get(1)}${STEIN_ZIMMERMANN_DISPLAY.get(4)}`, "Stein-Zimmermann +5 should stay in Stein-Zimmermann symbols");
   console.assert(accidentalDisplay(-6, true) === `${STEIN_ZIMMERMANN_DISPLAY.get(-2)}${STEIN_ZIMMERMANN_DISPLAY.get(-4)}`, "Stein-Zimmermann -6 should stay in Stein-Zimmermann symbols");
 
