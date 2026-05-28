@@ -322,18 +322,20 @@ function steinZimmermannDisplay(steps) {
   if (STEIN_ZIMMERMANN_DISPLAY.has(steps)) return STEIN_ZIMMERMANN_DISPLAY.get(steps);
   if (steps === 0) return STEIN_ZIMMERMANN_DISPLAY.get(0);
 
-  const symbols = [];
   const direction = steps > 0 ? 1 : -1;
   let remaining = Math.abs(steps);
+  const repeatedSymbols = [];
 
   while (remaining >= 4) {
-    symbols.push(STEIN_ZIMMERMANN_DISPLAY.get(direction * 4));
+    repeatedSymbols.push(STEIN_ZIMMERMANN_DISPLAY.get(direction * 4));
     remaining -= 4;
   }
 
+  const symbols = [];
   if (remaining > 0) {
     symbols.push(STEIN_ZIMMERMANN_DISPLAY.get(direction * remaining));
   }
+  symbols.push(...repeatedSymbols);
 
   return symbols.join("");
 }
@@ -858,8 +860,8 @@ function runTests() {
   const parseableHighAccidental = `C${stepsToInputAccidental(11)}4`;
   const parsedHighAccidental = parseNote(parseableHighAccidental);
   console.assert(!parsedHighAccidental.error && parsedHighAccidental.rawStep - 4 * EDO === 11, "High accidental fallback should remain parseable");
-  console.assert(accidentalDisplay(5, true) === `${STEIN_ZIMMERMANN_DISPLAY.get(4)}${STEIN_ZIMMERMANN_DISPLAY.get(1)}`, "Stein-Zimmermann +5 should stay in Stein-Zimmermann symbols");
-  console.assert(accidentalDisplay(-6, true) === `${STEIN_ZIMMERMANN_DISPLAY.get(-4)}${STEIN_ZIMMERMANN_DISPLAY.get(-2)}`, "Stein-Zimmermann -6 should stay in Stein-Zimmermann symbols");
+  console.assert(accidentalDisplay(5, true) === `${STEIN_ZIMMERMANN_DISPLAY.get(1)}${STEIN_ZIMMERMANN_DISPLAY.get(4)}`, "Stein-Zimmermann +5 should stay in Stein-Zimmermann symbols");
+  console.assert(accidentalDisplay(-6, true) === `${STEIN_ZIMMERMANN_DISPLAY.get(-2)}${STEIN_ZIMMERMANN_DISPLAY.get(-4)}`, "Stein-Zimmermann -6 should stay in Stein-Zimmermann symbols");
 
   const priorScaleSelect = els.scaleSelect.value;
   const priorRootNote = els.rootNote.value;
