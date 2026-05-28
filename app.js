@@ -309,13 +309,33 @@ function accidentalToSteps(text) {
 
 function accidentalDisplay(steps, hasExplicitAccidental = true) {
   if (!hasExplicitAccidental && steps === 0) return "";
-  if (getAccidentalStyle() === ACCIDENTAL_STYLE.STEIN_ZIMMERMANN && STEIN_ZIMMERMANN_DISPLAY.has(steps)) {
-    return STEIN_ZIMMERMANN_DISPLAY.get(steps);
+  if (getAccidentalStyle() === ACCIDENTAL_STYLE.STEIN_ZIMMERMANN) {
+    return steinZimmermannDisplay(steps);
   }
   if (UPDOWN_DISPLAY.has(steps)) return UPDOWN_DISPLAY.get(steps);
   if (steps > 0) return `+${steps}`;
   if (steps < 0) return `${steps}`;
   return "";
+}
+
+function steinZimmermannDisplay(steps) {
+  if (STEIN_ZIMMERMANN_DISPLAY.has(steps)) return STEIN_ZIMMERMANN_DISPLAY.get(steps);
+  if (steps === 0) return STEIN_ZIMMERMANN_DISPLAY.get(0);
+
+  const symbols = [];
+  const direction = steps > 0 ? 1 : -1;
+  let remaining = Math.abs(steps);
+
+  while (remaining >= 4) {
+    symbols.push(STEIN_ZIMMERMANN_DISPLAY.get(direction * 4));
+    remaining -= 4;
+  }
+
+  if (remaining > 0) {
+    symbols.push(STEIN_ZIMMERMANN_DISPLAY.get(direction * remaining));
+  }
+
+  return symbols.join("");
 }
 
 function getAccidentalStyle() {
@@ -838,6 +858,8 @@ function runTests() {
   const parseableHighAccidental = `C${stepsToInputAccidental(11)}4`;
   const parsedHighAccidental = parseNote(parseableHighAccidental);
   console.assert(!parsedHighAccidental.error && parsedHighAccidental.rawStep - 4 * EDO === 11, "High accidental fallback should remain parseable");
+  console.assert(accidentalDisplay(5, true) === `${STEIN_ZIMMERMANN_DISPLAY.get(4)}${STEIN_ZIMMERMANN_DISPLAY.get(1)}`, "Stein-Zimmermann +5 should stay in Stein-Zimmermann symbols");
+  console.assert(accidentalDisplay(-6, true) === `${STEIN_ZIMMERMANN_DISPLAY.get(-4)}${STEIN_ZIMMERMANN_DISPLAY.get(-2)}`, "Stein-Zimmermann -6 should stay in Stein-Zimmermann symbols");
 
   const priorScaleSelect = els.scaleSelect.value;
   const priorRootNote = els.rootNote.value;
