@@ -599,6 +599,8 @@ function hideErrors() {
 function drawStaff(events, ref) {
   const svg = els.staffSvg;
   const viewportWidth = Math.max(1000, Math.floor((svg.parentElement?.clientWidth || window.innerWidth) - 2));
+  const noteStartX = 120;
+  const noteSpacing = 80;
   const contentWidth = Math.max(520, 170 + events.length * 78);
   const width = contentWidth <= viewportWidth ? contentWidth : Math.max(viewportWidth, contentWidth);
   svg.style.minWidth = contentWidth <= viewportWidth ? "100%" : `${width}px`;
@@ -626,7 +628,7 @@ function drawStaff(events, ref) {
   }
 
   events.forEach((event, eventIndex) => {
-    const x = 156 + eventIndex * 78;
+    const x = noteStartX + eventIndex * noteSpacing;
     const avgDiatonic = event.notes.reduce((sum, n) => sum + n.diatonic, 0) / event.notes.length;
     const stemUp = avgDiatonic < staff.bottomLineDiatonic + 3;
     const ys = event.notes.map(note => noteY(note, staff));
