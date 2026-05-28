@@ -862,6 +862,7 @@ function runTests() {
   els.referenceNote.value = priorReferenceNote;
   els.refHz.value = priorReferenceHz;
   els.scaleWorkshopOutput.value = prior;
+  render();
 }
 
 window.addEventListener("resize", debounce(render, 120));
