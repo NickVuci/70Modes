@@ -8,6 +8,7 @@ const ACCIDENTAL_ARROW_Y_OFFSET = 8;
 const SMUFL_G_CLEF = String.fromCodePoint(0xE050);
 const ACCIDENTAL_STYLE = {
   ARROWS: "arrows",
+  SAGITTAL: "sagittal",
   STEIN_ZIMMERMANN: "stein-zimmermann"
 };
 const DEFAULT_REFERENCE_NOTE = "C4";
@@ -25,6 +26,17 @@ const STEIN_ZIMMERMANN_DISPLAY = new Map([
   [2, String.fromCodePoint(0xE262)],
   [3, String.fromCodePoint(0xE283)],
   [4, String.fromCodePoint(0xE263)]
+]);
+const SAGITTAL_DISPLAY = new Map([
+  [-4, String.fromCodePoint(0xE335)],
+  [-3, String.fromCodePoint(0xE327)],
+  [-2, String.fromCodePoint(0xE319)],
+  [-1, String.fromCodePoint(0xE30B)],
+  [0, String.fromCodePoint(0xE261)],
+  [1, String.fromCodePoint(0xE30A)],
+  [2, String.fromCodePoint(0xE318)],
+  [3, String.fromCodePoint(0xE326)],
+  [4, String.fromCodePoint(0xE334)]
 ]);
 
 const BASIC_MODES_31EDO = [["Ionian / Major","C4 D4 E4 F4 G4 A4 B4 C5"],["Dorian","C4 D4 Eb4 F4 G4 A4 Bb4 C5"],["Phrygian","C4 Db4 Eb4 F4 G4 Ab4 Bb4 C5"],["Lydian","C4 D4 E4 F#4 G4 A4 B4 C5"],["Mixolydian","C4 D4 E4 F4 G4 A4 Bb4 C5"],["Aeolian / Minor","C4 D4 Eb4 F4 G4 Ab4 Bb4 C5"],["Locrian","C4 Db4 Eb4 F4 Gb4 Ab4 Bb4 C5"],["Supermajor","C4 D4 Et4 F4 G4 At4 Bt4 C5"],["Colrian b3 b7","C4 Dt4 Eb4 F4 Gt4 At4 Bb4 C5"],["Subphrygian","C4 Ddb4 Edb4 F4 G4 Adb4 Bdb4 C5"],["Rodian #t4","C4 D4 Et4 F#t4 G4 A4 Bt4 C5"],["Gryphian b7","C4 Dt4 Et4 F4 G4 At4 Bb4 C5"],["Subminor d4","C4 D4 Edb4 Fd4 G4 Adb4 Bdb4 C5"],["Sublocrian b7","C4 Ddb4 Edb4 F4 Gdb4 Adb4 Bb4 C5"],["Subminor","C4 D4 Edb4 F4 G4 Adb4 Bdb4 C5"],["Sublocrian b3 b7","C4 Ddb4 Eb4 F4 Gdb4 Adb4 Bb4 C5"],["Gryphian","C4 Dt4 Et4 F4 G4 At4 Bt4 C5"],["Subdorian d4","C4 D4 Edb4 Fd4 G4 A4 Bdb4 C5"],["Subphrygian b7","C4 Ddb4 Edb4 F4 G4 Adb4 Bb4 C5"],["Supermajor #t4","C4 D4 Et4 F#t4 G4 At4 Bt4 C5"],["Colrian b7","C4 Dt4 Et4 F4 Gt4 At4 Bb4 C5"],["Subdorian","C4 D4 Edb4 F4 G4 A4 Bdb4 C5"],["Phrygian db2 db6","C4 Ddb4 Eb4 F4 G4 Adb4 Bb4 C5"],["Gryphian #t4","C4 Dt4 Et4 F#t4 G4 At4 Bt4 C5"],["Submixolydian d4","C4 D4 E4 Fd4 G4 A4 Bdb4 C5"],["Subminor (b7)","C4 D4 Edb4 F4 G4 Adb4 Bb4 C5"],["Locrian db2 db5","C4 Ddb4 Eb4 F4 Gdb4 Ab4 Bb4 C5"],["Colrian","C4 Dt4 Et4 F4 Gt4 At4 Bt4 C5"],["Rodian","C4 D4 Et4 F4 G4 A4 Bt4 C5"],["Dorian t2 t6","C4 Dt4 Eb4 F4 G4 At4 Bb4 C5"],["Subphrygian d4","C4 Ddb4 Edb4 Fd4 G4 Adb4 Bdb4 C5"],["Superlydian t7","C4 D4 E4 F#t4 G4 A4 Bt4 C5"],["Supermajor b7","C4 D4 Et4 F4 G4 At4 Bb4 C5"],["Minor t2 t5","C4 Dt4 Eb4 F4 Gt4 Ab4 Bb4 C5"],["Sublocrian","C4 Ddb4 Edb4 F4 Gdb4 Adb4 Bdb4 C5"],["Submixolydian","C4 D4 E4 F4 G4 A4 Bdb4 C5"],["Minor db6","C4 D4 Eb4 F4 G4 Adb4 Bb4 C5"],["Locrian db5","C4 Db4 Eb4 F4 Gdb4 Ab4 Bb4 C5"],["Dylian","C4 D4 E4 Fd4 G4 A4 B4 C5"],["Dorian db3","C4 D4 Edb4 F4 G4 A4 Bb4 C5"],["Phrygian db2","C4 Ddb4 Eb4 F4 G4 Ab4 Bb4 C5"],["Colrian #t4","C4 Dt4 Et4 F#t4 Gt4 At4 Bt4 C5"],["Superlydian","C4 D4 E4 F#t4 G4 A4 B4 C5"],["Mixolydian t3","C4 D4 Et4 F4 G4 A4 Bb4 C5"],["Minor / Aeolian t2","C4 Dt4 Eb4 F4 G4 Ab4 Bb4 C5"],["Sublocrian d4","C4 Ddb4 Edb4 Fd4 Gdb4 Adb4 Bdb4 C5"],["Moxidylian","C4 D4 E4 F4 G4 A4 Bt4 C5"],["Dorian t6","C4 D4 Eb4 F4 G4 At4 Bb4 C5"],["Phrygian t5","C4 Db4 Eb4 F4 Gt4 Ab4 Bb4 C5"],["Neutral / Mohajira / Mosh (4L3s)","C4 D4 Ed4 F4 G4 Ad4 Bd4 C5"],["Half Locrian b3 b7","C4 Dd4 Eb4 F4 Gd4 Ad4 Bb4 C5"],["Half Phrygian","C4 Dd4 Ed4 F4 G4 Ad4 Bd4 C5"],["Half Dorian t4","C4 D4 Ed4 Ft4 G4 A4 Bd4 C5"],["Half Phrygian b7","C4 Dd4 Ed4 F4 G4 Ad4 Bb4 C5"],["Neutral t4","C4 D4 Ed4 Ft4 G4 Ad4 Bd4 C5"],["Half Locrian b7","C4 Dd4 Ed4 F4 Gd4 Ad4 Bb4 C5"],["Rast / Half Dorian","C4 D4 Ed4 F4 G4 A4 Bd4 C5"],["Phrygian d2 d6","C4 Dd4 Eb4 F4 G4 Ad4 Bb4 C5"],["Half Phrygian t4","C4 Dd4 Ed4 Ft4 G4 Ad4 Bd4 C5"],["Half Lydian Dominant","C4 D4 E4 Ft4 G4 A4 Bd4 C5"],["Neutral b7","C4 D4 Ed4 F4 G4 Ad4 Bb4 C5"],["Locrian d2 d5","C4 Dd4 Eb4 F4 Gd4 Ab4 Bb4 C5"],["Half Locrian","C4 Dd4 Ed4 F4 Gd4 Ad4 Bd4 C5"],["Rosian / Half Lydian","C4 D4 E4 Ft4 G4 A4 B4 C5"],["Dorian d3","C4 D4 Ed4 F4 G4 A4 Bb4 C5"],["Phrygian d2","C4 Dd4 Eb4 F4 G4 Ab4 Bb4 C5"],["Half Locrian t4","C4 Dd4 Ed4 Ft4 Gd4 Ad4 Bd4 C5"],["Half Mixolydian","C4 D4 E4 F4 G4 A4 Bd4 C5"],["Minor / Aeolian d6","C4 D4 Eb4 F4 G4 Ad4 Bb4 C5"],["Locrian d5","C4 Db4 Eb4 F4 Gd4 Ab4 Bb4 C5"]];
@@ -308,6 +320,9 @@ function accidentalDisplay(steps, hasExplicitAccidental = true) {
   if (getAccidentalStyle() === ACCIDENTAL_STYLE.STEIN_ZIMMERMANN) {
     return steinZimmermannDisplay(steps);
   }
+  if (getAccidentalStyle() === ACCIDENTAL_STYLE.SAGITTAL) {
+    return sagittalDisplay(steps, hasExplicitAccidental);
+  }
   return arrowAccidentalDisplay(steps);
 }
 
@@ -347,6 +362,28 @@ function steinZimmermannDisplay(steps) {
   const symbols = [];
   if (remaining > 0) {
     symbols.push(STEIN_ZIMMERMANN_DISPLAY.get(direction * remaining));
+  }
+  symbols.push(...repeatedSymbols);
+
+  return symbols.join("");
+}
+
+function sagittalDisplay(steps, hasExplicitAccidental = true) {
+  if (steps === 0) return hasExplicitAccidental ? SAGITTAL_DISPLAY.get(0) : "";
+  if (SAGITTAL_DISPLAY.has(steps)) return SAGITTAL_DISPLAY.get(steps);
+
+  const direction = steps > 0 ? 1 : -1;
+  let remaining = Math.abs(steps);
+  const repeatedSymbols = [];
+
+  while (remaining >= 4) {
+    repeatedSymbols.push(SAGITTAL_DISPLAY.get(direction * 4));
+    remaining -= 4;
+  }
+
+  const symbols = [];
+  if (remaining > 0) {
+    symbols.push(SAGITTAL_DISPLAY.get(direction * remaining));
   }
   symbols.push(...repeatedSymbols);
 
@@ -877,6 +914,11 @@ function runTests() {
   console.assert(arrowAccidentalDisplay(-5) === "↓𝄫", "Arrow -5 should render as down-arrow then double flat glyph");
   console.assert(accidentalDisplay(5, true) === `${STEIN_ZIMMERMANN_DISPLAY.get(1)}${STEIN_ZIMMERMANN_DISPLAY.get(4)}`, "Stein-Zimmermann +5 should stay in Stein-Zimmermann symbols");
   console.assert(accidentalDisplay(-6, true) === `${STEIN_ZIMMERMANN_DISPLAY.get(-2)}${STEIN_ZIMMERMANN_DISPLAY.get(-4)}`, "Stein-Zimmermann -6 should stay in Stein-Zimmermann symbols");
+  console.assert(sagittalDisplay(1) === SAGITTAL_DISPLAY.get(1), "Sagittal +1 should use the dedicated 31-EDO diesis glyph");
+  console.assert(sagittalDisplay(2) === SAGITTAL_DISPLAY.get(2), "Sagittal +2 should use the Sagittal sharp glyph");
+  console.assert(sagittalDisplay(3) === SAGITTAL_DISPLAY.get(3), "Sagittal +3 should use the dedicated 31-EDO sharp-plus-diesis glyph");
+  console.assert(sagittalDisplay(5) === `${SAGITTAL_DISPLAY.get(1)}${SAGITTAL_DISPLAY.get(4)}`, "Sagittal +5 should compose from +1 and +4 glyphs");
+  console.assert(sagittalDisplay(-6) === `${SAGITTAL_DISPLAY.get(-2)}${SAGITTAL_DISPLAY.get(-4)}`, "Sagittal -6 should compose from -2 and -4 glyphs");
 
   const priorScaleSelect = els.scaleSelect.value;
   const priorRootNote = els.rootNote.value;
