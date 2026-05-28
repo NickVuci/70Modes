@@ -512,7 +512,7 @@ function drawStaff(events, ref) {
   svg.innerHTML = "";
 
   const staff = {
-    left: 72,
+    left: 18,
     right: width - 32,
     top: 50,
     lineSpacing: 12,
@@ -582,7 +582,8 @@ function noteY(note, staff) {
 
 function drawTrebleClef(svg, staff) {
   const gLineY = staff.top + 3 * staff.lineSpacing;
-  addText(svg, 34, gLineY + 20, SMUFL_G_CLEF, "82px", "400", "#1f1a16", "start", MUSIC_FONT_FAMILY);
+  const clef = addText(svg, 14, gLineY - 1, SMUFL_G_CLEF, "72px", "400", "#1f1a16", "start", MUSIC_FONT_FAMILY);
+  clef.setAttribute("dominant-baseline", "alphabetic");
 }
 
 function accidentalY(display, noteYPosition) {
@@ -603,16 +604,25 @@ function drawAccidental(svg, x, y, display) {
 }
 
 function drawLedgerLines(svg, x, diatonic, staff) {
+  getLedgerLineDiatonics(diatonic, staff).forEach(ledgerDiatonic => {
+    const y = noteY({ diatonic: ledgerDiatonic }, staff);
+    addLine(svg, x - 16, y, x + 16, y, "#1f1a16", 1.1);
+  });
+}
+
+function getLedgerLineDiatonics(diatonic, staff) {
   const topLine = staff.bottomLineDiatonic + 8;
   const bottomLine = staff.bottomLineDiatonic;
-  for (let d = diatonic; d < bottomLine; d += 2) {
-    const y = noteY({ diatonic: d }, staff);
-    addLine(svg, x - 16, y, x + 16, y, "#1f1a16", 1.1);
+  const ledgerLines = [];
+
+  for (let d = bottomLine - 2; d >= diatonic; d -= 2) {
+    ledgerLines.push(d);
   }
-  for (let d = diatonic; d > topLine; d -= 2) {
-    const y = noteY({ diatonic: d }, staff);
-    addLine(svg, x - 16, y, x + 16, y, "#1f1a16", 1.1);
+  for (let d = topLine + 2; d <= diatonic; d += 2) {
+    ledgerLines.push(d);
   }
+
+  return ledgerLines;
 }
 
 function chordCollisionOffset(event, note) {
@@ -711,6 +721,11 @@ function runTests() {
   updateScaleWorkshopOutput(events, true);
   console.assert(els.scaleWorkshopOutput.value === "5\\31\n11\\31\n13\\31\n18\\31\n24\\31\n29\\31\n31\\31", "Scale Workshop export test failed");
   els.scaleWorkshopOutput.value = prior;
+  const staff = { top: 50, lineSpacing: 12, bottomLineDiatonic: 4 * 7 + DIATONIC_INDEX.E };
+  console.assert(getLedgerLineDiatonics(parseNote("D4").diatonic, staff).length === 0, "D4 should not draw a ledger line");
+  console.assert(getLedgerLineDiatonics(parseNote("C4").diatonic, staff).join(",") === "28", "C4 should draw one ledger line");
+  console.assert(getLedgerLineDiatonics(parseNote("G5").diatonic, staff).length === 0, "G5 should not draw a ledger line");
+  console.assert(getLedgerLineDiatonics(parseNote("A5").diatonic, staff).join(",") === "40", "A5 should draw one ledger line");
 }
 
 window.addEventListener("resize", debounce(render, 120));
