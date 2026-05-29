@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>70 Modes Tests</title>
+  <style>
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 24px;
+      color: #241f1a;
+      background: #f7f2ea;
+    }
+
+    #status {
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    #status.pass {
+      color: #176a3a;
+    }
+
+    #status.fail {
+      color: #9f1d1d;
+    }
+
+    iframe {
+      width: 100%;
+      height: 720px;
+      border: 1px solid #d8cbbb;
+      background: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>70 Modes Tests</h1>
+  <div id="status">Running…</div>
+  <iframe id="appFrame" src="index.html" title="70 Modes app under test"></iframe>
+
+  <script>
+    const statusEl = document.getElementById("status");
+    const frame = document.getElementById("appFrame");
+
+    frame.addEventListener("load", () => {
+      const script = frame.contentDocument.createElement("script");
+      script.src = "tests.js";
+      script.onload = () => {
+        const results = frame.contentWindow.__APP_TEST_RESULTS__;
+        if (results?.failed) {
+          statusEl.textContent = `Failed after ${results.passed} passing assertions. See console.`;
+          statusEl.className = "fail";
+          return;
+        }
+        statusEl.textContent = `Passed ${results?.passed || 0} assertions.`;
+        statusEl.className = "pass";
+      };
+      script.onerror = () => {
+        statusEl.textContent = "Could not load tests.js.";
+        statusEl.className = "fail";
+      };
+      frame.contentDocument.body.appendChild(script);
+    });
+  </script>
+</body>
+</html>

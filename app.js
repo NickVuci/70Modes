@@ -1,15 +1,12 @@
 const {
   EDO,
   CENTS_PER_STEP,
-  DIATONIC_INDEX,
   parseMusic,
   parseNote,
-  stepsToInputAccidental,
   transposeScaleTokens
 } = window.MusicTheory;
 const {
-  drawStaff,
-  getLedgerLineDiatonics
+  drawStaff
 } = window.StaffRenderer;
 const {
   playSequence,
@@ -444,86 +441,6 @@ function escapeHTML(value) {
     .replaceAll("'", "&#039;");
 }
 
-function runTests() {
-  const tests = [
-    ["C#4", 2],
-    ["C^#4", 3],
-    ["C#t4", 3],
-    ["Ddb4", 2],
-    ["Et4", 11],
-    ["F#t4", 16],
-    ["C4", 0],
-    ["Cv4", -1],
-    ["Cb4", -2],
-    ["Cvb4", -3]
-  ];
-  tests.forEach(([token, raw]) => {
-    const note = parseNote(token);
-    console.assert(!note.error && note.rawStep - 4 * EDO === raw, `parse test failed: ${token}`);
-  });
-  const ref = parseNote("C4");
-  const events = enrichEvents(parseMusic("C4 D4 Et4 F4 G4 At4 Bt4 C5").events, ref, 261.625565);
-  const prior = els.scaleWorkshopOutput.value;
-  updateScaleWorkshopOutput(events, true);
-  console.assert(els.scaleWorkshopOutput.value === "5\\31\n11\\31\n13\\31\n18\\31\n24\\31\n29\\31\n31\\31", "Scale Workshop export test failed");
-  els.scaleWorkshopOutput.value = prior;
-  const staff = { top: 50, lineSpacing: 12, bottomLineDiatonic: 4 * 7 + DIATONIC_INDEX.E };
-  console.assert(getLedgerLineDiatonics(parseNote("D4").diatonic, staff).length === 0, "D4 should not draw a ledger line");
-  console.assert(getLedgerLineDiatonics(parseNote("C4").diatonic, staff).join(",") === "28", "C4 should draw one ledger line");
-  console.assert(getLedgerLineDiatonics(parseNote("G5").diatonic, staff).length === 0, "G5 should not draw a ledger line");
-  console.assert(getLedgerLineDiatonics(parseNote("A5").diatonic, staff).join(",") === "40", "A5 should draw one ledger line");
-
-  const supermajorTokens = BASIC_MODES_31EDO[7][1].split(/\s+/).filter(Boolean);
-  const dSupermajor = transposeScaleTokens(supermajorTokens, parseNote("D"));
-  console.assert(!dSupermajor.error, "D Supermajor should transpose without errors");
-  console.assert(dSupermajor.tokens.join(" ") === "D4 E4 F^#4 G4 A4 B^4 C^#5 D5", "D Supermajor transposition failed");
-
-  const cUpSupermajor = transposeScaleTokens(supermajorTokens, parseNote("C^"));
-  console.assert(!cUpSupermajor.error, "C^ Supermajor should transpose without errors");
-  console.assert(cUpSupermajor.tokens.join(" ") === "C^4 D^4 E#4 F^4 G^4 A#4 B#4 C^5", "C^ Supermajor transposition failed");
-
-  const octaveDefaultRoot = parseNote("Eb");
-  console.assert(!octaveDefaultRoot.error && octaveDefaultRoot.octave === 4, "Root parsing should default to octave 4");
-
-  const parseableHighAccidental = `C${stepsToInputAccidental(11)}4`;
-  const parsedHighAccidental = parseNote(parseableHighAccidental);
-  console.assert(!parsedHighAccidental.error && parsedHighAccidental.rawStep - 4 * EDO === 11, "High accidental fallback should remain parseable");
-  console.assert(arrowAccidentalDisplay(5) === "↑𝄪", "Arrow +5 should render as up-arrow then double sharp glyph");
-  console.assert(arrowAccidentalDisplay(-5) === "↓𝄫", "Arrow -5 should render as down-arrow then double flat glyph");
-  console.assert(accidentalDisplay(5, true) === `${STEIN_ZIMMERMANN_DISPLAY.get(1)}${STEIN_ZIMMERMANN_DISPLAY.get(4)}`, "Stein-Zimmermann +5 should stay in Stein-Zimmermann symbols");
-  console.assert(accidentalDisplay(-6, true) === `${STEIN_ZIMMERMANN_DISPLAY.get(-2)}${STEIN_ZIMMERMANN_DISPLAY.get(-4)}`, "Stein-Zimmermann -6 should stay in Stein-Zimmermann symbols");
-  console.assert(sagittalDisplay(1) === SAGITTAL_DISPLAY.get(1), "Sagittal +1 should use the dedicated 31-EDO diesis glyph");
-  console.assert(sagittalDisplay(2) === SAGITTAL_DISPLAY.get(2), "Sagittal +2 should use the Sagittal sharp glyph");
-  console.assert(sagittalDisplay(3) === SAGITTAL_DISPLAY.get(3), "Sagittal +3 should use the dedicated 31-EDO sharp-plus-diesis glyph");
-  console.assert(sagittalDisplay(5) === `${SAGITTAL_DISPLAY.get(1)}${SAGITTAL_DISPLAY.get(4)}`, "Sagittal +5 should compose from +1 and +4 glyphs");
-  console.assert(sagittalDisplay(-6) === `${SAGITTAL_DISPLAY.get(-2)}${SAGITTAL_DISPLAY.get(-4)}`, "Sagittal -6 should compose from -2 and -4 glyphs");
-
-  const priorScaleSelect = els.scaleSelect.value;
-  const priorRootNote = els.rootNote.value;
-  const priorMusicInput = els.musicInput.value;
-  const priorReferenceNote = els.referenceNote.value;
-  const priorReferenceHz = els.refHz.value;
-  els.referenceNote.value = "F4";
-  els.refHz.value = "349.228231";
-  els.scaleSelect.value = "7";
-  els.rootNote.value = "D";
-  applySelectedScale();
-  console.assert(els.referenceNote.value === "F4", "Reference note should stay unchanged when root changes");
-  console.assert(els.refHz.value === "349.228231", "Reference Hz should stay unchanged when root changes");
-
-  const dEvents = enrichEvents(parseMusic(dSupermajor.tokens.join(" ")).events, parseNote("D4"), 293.664768);
-  updateScaleWorkshopOutput(dEvents, true);
-  console.assert(els.scaleWorkshopOutput.value === "5\\31\n11\\31\n13\\31\n18\\31\n24\\31\n29\\31\n31\\31", "Transposed Scale Workshop export should preserve mode steps");
-
-  els.scaleSelect.value = priorScaleSelect;
-  els.rootNote.value = priorRootNote;
-  els.musicInput.value = priorMusicInput;
-  els.referenceNote.value = priorReferenceNote;
-  els.refHz.value = priorReferenceHz;
-  els.scaleWorkshopOutput.value = prior;
-  render();
-}
-
 window.addEventListener("resize", debounce(render, 120));
 populateScaleSelect();
 updateClockCenter();
@@ -531,4 +448,3 @@ updateAffectSummary();
 normalizeReferenceHzDisplay();
 els.scaleSelect.value = "0";
 applySelectedScale();
-runTests();
